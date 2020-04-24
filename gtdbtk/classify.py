@@ -599,7 +599,6 @@ class Classify(object):
         if len(fastani_verification) > 0:
             fastani = FastANI(cpus=self.cpus, force_single=True)
             self.logger.info(f'fastANI version: {fastani.version}')
-
             d_ani_compare, d_paths = self._get_fastani_genome_path(
                 fastani_verification, genomes)
             all_fastani_dict = fastani.run(d_ani_compare, d_paths)
@@ -610,12 +609,6 @@ class Classify(object):
 
         self.logger.info('{0} genome(s) have been classified using FastANI and pplacer.'.format(
             len(classified_user_genomes)))
-
-        # If Fastani can't select a taxonomy for a genome, we use RED
-        # distances
-
-
-
         user_genome_ids = set(read_fasta(user_msa_file).keys())
         # we remove ids already classified with FastANI
         user_genome_ids = user_genome_ids.difference(
