@@ -13,6 +13,7 @@ from gtdbtk.external.fastani import FastANI
 from gtdbtk.external.mash import Mash
 
 
+
 class ANIRep(object):
     """Computes a list of genomes to a list of representatives."""
 

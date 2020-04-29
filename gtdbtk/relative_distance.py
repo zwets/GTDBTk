@@ -24,6 +24,8 @@ from numpy import (median as np_median,
                    percentile as np_percentile,
                    ones_like as np_ones_like,
                    histogram as np_histogram)
+                   
+import dendropy
 
 from gtdbtk.biolib_lite.newick import parse_label
 from gtdbtk.biolib_lite.taxonomy import Taxonomy
@@ -89,6 +91,9 @@ class RelativeDistance(object):
           num_taxa: number of terminal taxa
           rel_dists: relative distance of node between root and extant organisms
         """
+        
+        if isinstance(root_node, dendropy.Tree):
+            root_node = root_node.seed_node
 
         if isinstance(root_node, dendropy.Tree):
             root_node = root_node.seed_node
