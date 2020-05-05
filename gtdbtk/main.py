@@ -475,14 +475,13 @@ class OptionsParser(object):
         genomes, _ = self._genomes_to_process(
             options.genome_dir, options.batchfile, options.extension)
 
-        classify = Classify(options.cpus, options.pplacer_cpus)
+        classify = Classify(options.cpus, options.pplacer_cpus,options.debug)
         classify.run(genomes,
                      options.align_dir,
                      options.out_dir,
                      options.prefix,
                      options.scratch_dir,
                      options.recalculate_red,
-                     options.debug,
                      options.split_tree)
 
         self.logger.info('Done.')
