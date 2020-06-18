@@ -232,13 +232,13 @@ class OptionsParser(object):
             self.logger.error('No marker set specified.')
             raise GenomeMarkerSetUnknown('No marker set specified.')
         return marker_set_id
-        
+
     def _read_taxonomy_files(self, options):
         """Read and merge taxonomy files."""
-        
+
         self.logger.info('Reading GTDB taxonomy for representative genomes.')
         taxonomy = Taxonomy().read(Config.TAXONOMY_FILE)
-        
+
         if options.gtdbtk_classification_file:
             # add and overwrite taxonomy for genomes specified in the
             # GTDB-Tk classification file
@@ -252,10 +252,10 @@ class OptionsParser(object):
                 if gid in taxonomy:
                     num_reassigned += 1
                 taxonomy[gid] = taxa
-                
+
             self.logger.info(f'Read GTDB-Tk classifications for {len(gtdbtk_taxonomy):,} genomes.')
             self.logger.info(f'Reassigned taxonomy for {num_reassigned:,} GTDB representative genomes.')
-            
+
         if options.custom_taxonomy_file:
             # add and overwrite taxonomy for genomes specified in the
             # custom taxonomy file
@@ -268,20 +268,23 @@ class OptionsParser(object):
                 if gid in taxonomy:
                     num_reassigned += 1
                 taxonomy[gid] = taxa
-                
+
             self.logger.info(f'Read custom taxonomy for {len(custom_taxonomy):,} genomes.')
             self.logger.info(f'Reassigned taxonomy for {num_reassigned:,} GTDB representative genomes.')
-            
+
         if options.gtdbtk_classification_file and options.custom_taxonomy_file:
             dup_genomes = set(gtdbtk_taxonomy).intersection(custom_taxonomy)
             if len(dup_genomes) > 0:
-                self.logger.error('GTDB-Tk classification and custom taxonomy files must not specify taxonomies for the same genomes.')
-                self.logger.error('These files have {:,} genomes in common.'.format(len(dup_genomes)))
-                self.logger.error('Example duplicate genome: {}'.format(dup_genomes.pop()))
+                self.logger.error(
+                    'GTDB-Tk classification and custom taxonomy files must not specify taxonomies for the same genomes.')
+                self.logger.error(
+                    'These files have {:,} genomes in common.'.format(len(dup_genomes)))
+                self.logger.error(
+                    'Example duplicate genome: {}'.format(dup_genomes.pop()))
                 raise GTDBTkExit('Duplicated taxonomy information.')
-                
+
         self.logger.info(f'Read taxonomy for {len(taxonomy):,} genomes.')
-        
+
         return taxonomy
 
     def _read_taxonomy_files(self, options):
@@ -329,8 +332,10 @@ class OptionsParser(object):
                 self.logger.error('GTDB-Tk classification and custom taxonomy '
                                   'files must not specify taxonomies for the '
                                   'same genomes.')
-                self.logger.error('These files have {:,} genomes in common.'.format(len(dup_genomes)))
-                self.logger.error('Example duplicate genome: {}'.format(dup_genomes.pop()))
+                self.logger.error(
+                    'These files have {:,} genomes in common.'.format(len(dup_genomes)))
+                self.logger.error(
+                    'Example duplicate genome: {}'.format(dup_genomes.pop()))
                 raise GTDBTkExit('Duplicated taxonomy information.')
 
         self.logger.info(f'Read taxonomy for {len(taxonomy):,} genomes.')
@@ -533,14 +538,13 @@ class OptionsParser(object):
         genomes, _ = self._genomes_to_process(
             options.genome_dir, options.batchfile, options.extension)
 
-        classify = Classify(options.cpus, options.pplacer_cpus)
+        classify = Classify(options.cpus, options.pplacer_cpus, options.debug)
         classify.run(genomes,
                      options.align_dir,
                      options.out_dir,
                      options.prefix,
                      options.scratch_dir,
                      options.recalculate_red,
-                     options.debug,
                      options.split_tree)
 
         self.logger.info('Done.')
@@ -631,14 +635,14 @@ class OptionsParser(object):
                                        os.path.basename(PATH_BAC120_DECORATED_TREE.format(prefix=options.prefix))))
                 symlink_f(PATH_BAC120_DECORATED_TREE.format(prefix=options.prefix) + '-table',
                           os.path.join(options.out_dir,
-                                       os.path.basename(PATH_BAC120_DECORATED_TREE.format(prefix=options.prefix)  + '-table')))
+                                       os.path.basename(PATH_BAC120_DECORATED_TREE.format(prefix=options.prefix) + '-table')))
             elif options.suffix == 'ar122':
                 symlink_f(PATH_AR122_DECORATED_TREE.format(prefix=options.prefix),
                           os.path.join(options.out_dir,
                                        os.path.basename(PATH_AR122_DECORATED_TREE.format(prefix=options.prefix))))
                 symlink_f(PATH_AR122_DECORATED_TREE.format(prefix=options.prefix) + '-table',
                           os.path.join(options.out_dir,
-                                       os.path.basename(PATH_AR122_DECORATED_TREE.format(prefix=options.prefix)  + '-table')))
+                                       os.path.basename(PATH_AR122_DECORATED_TREE.format(prefix=options.prefix) + '-table')))
             else:
                 raise GenomeMarkerSetUnknown(
                     'There was an error determining the marker set.')
@@ -782,10 +786,12 @@ class OptionsParser(object):
         elif options.subparser_name == 'classify_wf':
 
             # TODO: Remove this block once the split_tree function is implemented.
-            if hasattr(options, 'split_tree'):
-                self.logger.warning('The split tree option is not yet '
-                                    ' supported, overriding value to False.')
-            options.split_tree = False
+            #==================================================================
+            # if hasattr(options, 'split_tree'):
+            #     self.logger.warning('The split tree option is not yet '
+            #                         ' supported, overriding value to False.')
+            # options.split_tree = False
+            #==================================================================
 
             check_dependencies(
                 ['prodigal', 'hmmalign', 'pplacer', 'guppy', 'fastANI'])
@@ -816,14 +822,18 @@ class OptionsParser(object):
             self.infer(options)
         elif options.subparser_name == 'classify':
 
-            # TODO: Remove this block once the split_tree function is implemented.
-            if hasattr(options, 'split_tree'):
-                self.logger.warning('The split tree option is not yet '
-                                    ' supported, overriding value to False.')
-            options.split_tree = False
+            # TODO: Remove this block once the split_tree function is
+            # implemented.
+            #==================================================================
+            # if hasattr(options, 'split_tree'):
+            #     self.logger.warning('The split tree option is not yet '
+            #                         ' supported, overriding value to False.')
+            # options.split_tree = False
+            #==================================================================
 
             if options.recalculate_red and options.split_tree:
-                raise GTDBTkExit('--split_tree and --recalculate_red are mutually exclusive.')
+                raise GTDBTkExit(
+                    '--split_tree and --recalculate_red are mutually exclusive.')
             self.classify(options)
         elif options.subparser_name == 'root':
             self.root(options)
