@@ -63,7 +63,6 @@ class Classify(object):
         self.pplacer_cpus = max(pplacer_cpus if pplacer_cpus else cpus, 1)
 
         self.species_radius = self.parse_radius_file()
-
         self.reference_ids = get_reference_ids()
 
         # rank_of_interest determine the rank in the tree_mapping file for
@@ -310,6 +309,12 @@ class Classify(object):
         return marker_dict
 
     def _parse_red_dict(self, red_dist_dict):
+        """
+        Parse the red dictionary from Config file and store the value in a dictionary
+
+        :param red_dist_dict: dictionary stored in the gtdbtk package
+        :return: dictionary mapping the rank to the RED value
+        """
         results = {}
         for k, v in red_dist_dict.items():
             if k in ['d__', 'domain']:
@@ -407,9 +412,13 @@ class Classify(object):
                 out_dir, prefix, marker_set_id)
 
             if splittreeopt is True and marker_set_id == 'bac120':
+
                 # run pplacer to place bins in high reference genome tree
                 num_genomes = sum(
                     [1 for _seq_id, _seq in read_seq(user_msa_file)])
+                summaryfout, debugfile, conflict_file = self._generate_summary_file(marker_set_id,
+                                                                                    prefix, out_dir,
+                                                                                    splittreeopt)
 
                 high_classify_tree = self.place_genomes(user_msa_file,
                                                         marker_set_id,
@@ -418,14 +427,11 @@ class Classify(object):
                                                         scratch_dir,
                                                         'high')
 
-                summaryfout, debugfile, conflict_file = self._generate_summary_file(
-                    marker_set_id, prefix, out_dir, splittreeopt)
-
                 high_mrca_tree = self._assign_mrca_red(
                     high_classify_tree, marker_set_id, 'high')
 
-                high_classification = self._get_high_pplacer_taxonomy(
-                    out_dir, prefix, user_msa_file, high_mrca_tree)
+                high_classification = self._get_high_pplacer_taxonomy(out_dir,
+                                                                      prefix, user_msa_file, high_mrca_tree)
 
                 tree_mapping_dict = {}
                 with open(Config.LOW_TREE_MAPPING_FILE) as ltmf:
@@ -463,6 +469,7 @@ class Classify(object):
                 # get taxonomic classification of each user genome
                 summaryfout, debugfile, conflict_file = self._generate_summary_file(
                     marker_set_id, prefix, out_dir, splittreeopt)
+                tree_to_process = None
 
                 if recalculate_red:
                     tree_to_process = self._calculate_red_distances(
@@ -474,10 +481,18 @@ class Classify(object):
                 pplacer_taxonomy_dict = self._get_pplacer_taxonomy(out_dir, prefix, marker_set_id, user_msa_file,
                                                                    tree_to_process)
 
-                self._parse_tree(tree_to_process, genomes, msa_dict, percent_multihit_dict,
+                self._parse_tree(tree_to_process,
+                                 genomes,
+                                 msa_dict,
+                                 percent_multihit_dict,
                                  trans_table_dict,
-                                 bac_ar_diff, user_msa_file, marker_dict, summaryfout, conflict_file,
-                                 pplacer_taxonomy_dict, None,
+                                 bac_ar_diff,
+                                 user_msa_file,
+                                 marker_dict,
+                                 summaryfout,
+                                 conflict_file,
+                                 pplacer_taxonomy_dict,
+                                 None,
                                  debugfile)
 
                 # Symlink to the summary file from the root
@@ -534,7 +549,7 @@ class Classify(object):
                 out_dir, PATH_BAC120_CONFLICT.format(prefix=prefix)), 'w')
             conflict_summary.write(
                 "User genome\tHigh classification\tLow Classification\n")
-        return summaryfout, debug_file, conflict_summary
+        return(summaryfout, debug_file, conflict_summary)
 
     def _place_in_low_tree(self, tree_iter, listg, msa_dict, marker_set_id, prefix, scratch_dir, out_dir):
         """
@@ -554,7 +569,6 @@ class Classify(object):
             out_dir, PATH_LOW_BAC120_SUBMSA.format(iter=tree_iter))
 
         submsa_file = open(submsa_file_path, 'w')
-
         for gid in listg:
             submsa_file.write('>{}\n{}\n'.format(gid, msa_dict.get(gid)))
         submsa_file.close()
@@ -711,6 +725,8 @@ class Classify(object):
                         name)[self.order_rank.index(child_rk)] for name in list_subnode]
 
                     # if there is just one rank name
+                    # (i.e one order) we select the RED value of this rank to compare with the
+                    # RED value of the genome of interest
                     if len(set(list_ranks)) == 1:
                         for subranknd in cur_node.preorder_iter():
                             _support, subranknd_taxon, _aux_info = parse_label(
@@ -862,6 +878,14 @@ class Classify(object):
                             leaf.taxon.label).get('tk_tax'), summary_list[1]))
 
     def _map_high_taxonomy(self, high_classification, mapping_dict, summary_file):
+        """
+        Based on the classification on the high reference tree, we select which genomes go to which low reference tree
+
+        :param high_classification: Taxonomy from the high reference tree
+        :param mapping_dict: dictionary mapping the order of interest and the low tree id
+        :param summary_file: Summary file
+        :return: dictionary low tree of reference=[list of user genomes]
+        """
         mapped_rank = {}
         counter = 0
         rktocheck = []
@@ -1335,6 +1359,12 @@ class Classify(object):
         return ';'.join(subtax)
 
     def _parse_subnodes(self, list_subnode, closest_rank):
+        """
+        Parse the taxonomy of a list of nodes
+        :param list_subnode: List of nodes to parse
+        :param closest_rank: Rank of insterest
+        :return: Return the list of rank of interest for the set of genomes
+        """
         subtax = []
         multirefrank = []
         initial_loop = True
@@ -1786,6 +1816,7 @@ class Classify(object):
                         if cur_node.is_internal():
                             # We check if the genome is place on a terminal
                             # branch
+
                             child_genomes = [nd.taxon.label for nd in cur_node.leaf_nodes(
                             ) if nd.taxon.label not in user_genome_ids]
                             if len(child_genomes) == 1:
@@ -1819,6 +1850,11 @@ class Classify(object):
 
                         taxa_str = self._classify_on_terminal_branch(
                             tax_of_leaf, current_rel_dist, taxa_str.split(';')[-1][0:3], term_branch_taxonomy, red_bac_dict)
+                        #======================================================
+                        # tax_of_leaf = term_branch_taxonomy[term_branch_taxonomy.index(taxa_str.split(';')[-1]) + 1:-1]
+                        # taxa_str = self._classify_on_terminal_branch(
+                        #     tax_of_leaf, current_rel_dist, taxa_str.split(';')[-1][0:3], term_branch_taxonomy,red_bac_dict)
+                        #======================================================
                     else:
                         cur_node = leaf
                         parent_taxon_node = cur_node.parent_node
@@ -1904,7 +1940,7 @@ class Classify(object):
                     closest_rank = child_taxon
                     break
         if closest_rank is not None:
-            # when we have the closest rank found, we can din it in
+            # when we have the closest rank found, we can find it in
             # gtdb_Taxonomy and get the higher level from it.
             for k, v in self.gtdb_taxonomy.items():
                 if '{};'.format(closest_rank) in v:
