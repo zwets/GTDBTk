@@ -4,9 +4,12 @@ from os.path import join
 DIR_IDENTIFY = 'identify'
 DIR_IDENTIFY_INTERMEDIATE = join(DIR_IDENTIFY, 'intermediate_results')
 DIR_MARKER_GENE = join(DIR_IDENTIFY_INTERMEDIATE, 'marker_genes')
-PATH_BAC120_MARKER_SUMMARY = join(DIR_IDENTIFY, '{prefix}.bac120.markers_summary.tsv')
-PATH_AR122_MARKER_SUMMARY = join(DIR_IDENTIFY, '{prefix}.ar122.markers_summary.tsv')
-PATH_TLN_TABLE_SUMMARY = join(DIR_IDENTIFY, '{prefix}.translation_table_summary.tsv')
+PATH_BAC120_MARKER_SUMMARY = join(
+    DIR_IDENTIFY, '{prefix}.bac120.markers_summary.tsv')
+PATH_AR122_MARKER_SUMMARY = join(
+    DIR_IDENTIFY, '{prefix}.ar122.markers_summary.tsv')
+PATH_TLN_TABLE_SUMMARY = join(
+    DIR_IDENTIFY, '{prefix}.translation_table_summary.tsv')
 
 # Command: identify -> marker genes
 GENOME_FILE_SUFFIX = "_genomic.fna"
@@ -29,8 +32,10 @@ PATH_BAC120_MSA = join(DIR_ALIGN, '{prefix}.bac120.msa.fasta')
 PATH_AR122_MSA = join(DIR_ALIGN, '{prefix}.ar122.msa.fasta')
 PATH_BAC120_USER_MSA = join(DIR_ALIGN, '{prefix}.bac120.user_msa.fasta')
 PATH_AR122_USER_MSA = join(DIR_ALIGN, '{prefix}.ar122.user_msa.fasta')
-PATH_BAC120_MARKER_INFO = join(DIR_ALIGN_INTERMEDIATE, '{prefix}.bac120.marker_info.tsv')
-PATH_AR122_MARKER_INFO = join(DIR_ALIGN_INTERMEDIATE, '{prefix}.ar122.marker_info.tsv')
+PATH_BAC120_MARKER_INFO = join(
+    DIR_ALIGN_INTERMEDIATE, '{prefix}.bac120.marker_info.tsv')
+PATH_AR122_MARKER_INFO = join(
+    DIR_ALIGN_INTERMEDIATE, '{prefix}.ar122.marker_info.tsv')
 DIR_ALIGN_MARKERS = join(DIR_ALIGN_INTERMEDIATE, 'markers')
 
 # Command: classify
@@ -39,25 +44,36 @@ PATH_BAC120_TREE_FILE = join(DIR_CLASSIFY, '{prefix}.bac120.classify.tree')
 PATH_AR122_TREE_FILE = join(DIR_CLASSIFY, '{prefix}.ar122.classify.tree')
 PATH_BAC120_SUMMARY_OUT = join(DIR_CLASSIFY, '{prefix}.bac120.summary.tsv')
 PATH_AR122_SUMMARY_OUT = join(DIR_CLASSIFY, '{prefix}.ar122.summary.tsv')
-PATH_HIGH_BAC120_TREE_FILE = join(DIR_CLASSIFY, '{prefix}.high.bac120.classify.tree')
-PATH_LOW_BAC120_TREE_FILE = join(DIR_CLASSIFY, '{prefix}.bac120.classify.tree.{iter}.tree')
+PATH_HIGH_BAC120_TREE_FILE = join(
+    DIR_CLASSIFY, '{prefix}.high.bac120.classify.tree')
+PATH_LOW_BAC120_TREE_FILE = join(
+    DIR_CLASSIFY, '{prefix}.bac120.classify.tree.{iter}.tree')
 PATH_BAC120_CONFLICT = join(DIR_CLASSIFY, '{prefix}.bac120.conflict.tsv')
 
 DIR_CLASSIFY_INTERMEDIATE = join(DIR_CLASSIFY, 'intermediate_results')
-PATH_BAC120_RED_DICT = join(DIR_CLASSIFY_INTERMEDIATE, '{prefix}.bac120.red_dictionary.tsv')
-PATH_AR122_RED_DICT = join(DIR_CLASSIFY_INTERMEDIATE, '{prefix}.ar122.red_dictionary.tsv')
-PATH_BAC120_PPLACER_CLASS = join(DIR_CLASSIFY_INTERMEDIATE, '{prefix}.bac120.classification_pplacer.tsv')
-PATH_BAC120_HIGH_PPLACER_CLASS = join(DIR_CLASSIFY_INTERMEDIATE, '{prefix}.bac120.high.classification_pplacer.tsv')
-PATH_BAC120_LOW_PPLACER_CLASS = join(DIR_CLASSIFY_INTERMEDIATE, '{prefix}.bac120.low.classification_pplacer_tree_{iter}.tsv')
+PATH_BAC120_RED_DICT = join(
+    DIR_CLASSIFY_INTERMEDIATE, '{prefix}.bac120.red_dictionary.tsv')
+PATH_AR122_RED_DICT = join(DIR_CLASSIFY_INTERMEDIATE,
+                           '{prefix}.ar122.red_dictionary.tsv')
+PATH_BAC120_PPLACER_CLASS = join(
+    DIR_CLASSIFY_INTERMEDIATE, '{prefix}.bac120.classification_pplacer.tsv')
+PATH_BAC120_HIGH_PPLACER_CLASS = join(
+    DIR_CLASSIFY_INTERMEDIATE, '{prefix}.bac120.high.classification_pplacer.tsv')
+PATH_BAC120_LOW_PPLACER_CLASS = join(
+    DIR_CLASSIFY_INTERMEDIATE, '{prefix}.bac120.low.classification_pplacer_tree_{iter}.tsv')
 
 
-PATH_AR122_PPLACER_CLASS = join(DIR_CLASSIFY_INTERMEDIATE, '{prefix}.ar122.classification_pplacer.tsv')
+PATH_AR122_PPLACER_CLASS = join(
+    DIR_CLASSIFY_INTERMEDIATE, '{prefix}.ar122.classification_pplacer.tsv')
 
 DIR_PPLACER = join(DIR_CLASSIFY_INTERMEDIATE, 'pplacer')
 PATH_BAC120_PPLACER_OUT = join(DIR_PPLACER, 'pplacer.bac120.out')
 PATH_AR122_PPLACER_OUT = join(DIR_PPLACER, 'pplacer.ar122.out')
 PATH_BAC120_PPLACER_JSON = join(DIR_PPLACER, 'pplacer.bac120.json')
 PATH_AR122_PPLACER_JSON = join(DIR_PPLACER, 'pplacer.ar122.json')
+PATH_AR122_PPLACER_MEM = join(DIR_PPLACER, 'pplacer.ar122.mem.tsv')
+PATH_BAC120_PPLACER_MEM = join(DIR_PPLACER, 'pplacer.bac120.mem.tsv')
+
 
 # SPLIT TREE
 PATH_HIGH_BAC120_PPLACER_OUT = join(DIR_PPLACER, 'pplacer.high.bac120.out')
@@ -70,17 +86,24 @@ PATH_LOW_BAC120_PPLACER_JSON = join(DIR_LOW_PPLACER, 'pplacer.low.bac120.json')
 # Command: infer
 DIR_INFER = 'infer'
 DIR_INFER_INTERMEDIATE = join(DIR_INFER, 'intermediate_results')
-PATH_MARKER_UNROOTED_TREE = join(DIR_INFER_INTERMEDIATE, '{prefix}.{marker}.unrooted.tree')
+PATH_MARKER_UNROOTED_TREE = join(
+    DIR_INFER_INTERMEDIATE, '{prefix}.{marker}.unrooted.tree')
 PATH_UNROOTED_TREE = join(DIR_INFER_INTERMEDIATE, '{prefix}.unrooted.tree')
-PATH_MARKER_TREE_LOG = join(DIR_INFER_INTERMEDIATE, '{prefix}.{marker}.tree.log')
+PATH_MARKER_TREE_LOG = join(DIR_INFER_INTERMEDIATE,
+                            '{prefix}.{marker}.tree.log')
 PATH_TREE_LOG = join(DIR_INFER_INTERMEDIATE, '{prefix}.tree.log')
-PATH_MARKER_FASTTREE_LOG = join(DIR_INFER_INTERMEDIATE, '{prefix}.{marker}.fasttree.log')
+PATH_MARKER_FASTTREE_LOG = join(
+    DIR_INFER_INTERMEDIATE, '{prefix}.{marker}.fasttree.log')
 PATH_FASTTREE_LOG = join(DIR_INFER_INTERMEDIATE, '{prefix}.fasttree.log')
 
-PATH_BAC120_UNROOTED_TREE = join(DIR_INFER_INTERMEDIATE, '{prefix}.bac120.unrooted.tree')
-PATH_AR122_UNROOTED_TREE = join(DIR_INFER_INTERMEDIATE, '{prefix}.ar122.unrooted.tree')
-PATH_BAC120_ROOTED_TREE = join(DIR_INFER_INTERMEDIATE, '{prefix}.bac120.rooted.tree')
-PATH_AR122_ROOTED_TREE = join(DIR_INFER_INTERMEDIATE, '{prefix}.ar122.rooted.tree')
+PATH_BAC120_UNROOTED_TREE = join(
+    DIR_INFER_INTERMEDIATE, '{prefix}.bac120.unrooted.tree')
+PATH_AR122_UNROOTED_TREE = join(
+    DIR_INFER_INTERMEDIATE, '{prefix}.ar122.unrooted.tree')
+PATH_BAC120_ROOTED_TREE = join(
+    DIR_INFER_INTERMEDIATE, '{prefix}.bac120.rooted.tree')
+PATH_AR122_ROOTED_TREE = join(
+    DIR_INFER_INTERMEDIATE, '{prefix}.ar122.rooted.tree')
 PATH_BAC120_DECORATED_TREE = join(DIR_INFER, '{prefix}.bac120.decorated.tree')
 PATH_AR122_DECORATED_TREE = join(DIR_INFER, '{prefix}.ar122.decorated.tree')
 

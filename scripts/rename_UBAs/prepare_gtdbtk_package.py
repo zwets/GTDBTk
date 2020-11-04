@@ -171,7 +171,8 @@ class OptionsParser(object):
                 if filenamef == "U_74684":
                     print(subdict)
                     print(genome)
-                    print(os.path.join(fastani_dir, subdict.get("gca")[3:] + "_genomic.fna"))
+                    print(os.path.join(fastani_dir, subdict.get(
+                        "gca")[3:] + "_genomic.fna"))
                 if "gca" in subdict.keys():
                     copyfile(genome, os.path.join(
                         fastani_dir, subdict.get("gca")[3:] + "_genomic.fna"))

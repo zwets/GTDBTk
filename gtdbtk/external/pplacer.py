@@ -33,10 +33,14 @@ class Pplacer(object):
     (http://matsen.fredhutch.org/pplacer/).
     """
 
-    def __init__(self):
+    def __init__(self, marker_set_id=None, levelopt=None, tree_iter=None):
         """ Instantiate the class. """
         self.logger = logging.getLogger('timestamp')
         self.version = self._get_version()
+
+        self.marker_set_id = marker_set_id
+        self.levelopt = levelopt
+        self.tree_iter = tree_iter
 
     def _get_version(self):
         try:
@@ -49,7 +53,7 @@ class Pplacer(object):
         except:
             return "(version unavailable)"
 
-    def run(self, cpus, model, ref_pkg, json_out, msa_file, pplacer_out,
+    def run(self, cpus, model, ref_pkg, json_out, msa_file, pplacer_out, pplacer_mem,
             mmap_file=None):
         """Place genomes into a reference tree.
 
@@ -74,11 +78,17 @@ class Pplacer(object):
             args.append(mmap_file)
         self.logger.debug(' '.join(args))
 
+        #======================================================================
+        # pplacer_mem_file = open(pplacer_mem, 'w')
+        # print(pplacer_mem)
+        #======================================================================
+
         out_q = mp.Queue()
         pid = mp.Value('i', 0)
         p_worker = mp.Process(target=self._worker, args=(
             args, out_q, pplacer_out, pid))
-        p_writer = mp.Process(target=self._writer, args=(out_q, pid))
+        p_writer = mp.Process(target=self._writer, args=(
+            out_q, pplacer_mem, pid))
 
         try:
             p_worker.start()
@@ -91,6 +101,7 @@ class Pplacer(object):
             if p_worker.exitcode != 0:
                 raise PplacerException(
                     'An error was encountered while running pplacer.')
+
         except Exception:
             p_worker.terminate()
             p_writer.terminate()
@@ -125,7 +136,7 @@ class Pplacer(object):
                                        'running pplacer, check the log '
                                        'file: {}'.format(pplacer_out))
 
-    def _writer(self, out_q, pid):
+    def _writer(self, out_q, pplacer_mem, pid):
         """The writer subprocess is able to report on newly piped events from
         subprocess in the worker thread, and report on memory usage while
         waiting for new commands."""
@@ -143,6 +154,11 @@ class Pplacer(object):
         # Create a progress bar which tracks the initialization step of
         # pplacer.
         bar_fmt = '==> {desc}.'
+
+        # File setup to write memory
+        virt = None
+        pplacer_mem_file = open(pplacer_mem, 'a')
+
         with tqdm(bar_format=bar_fmt) as p_bar:
             p_bar.set_description_str(desc='Step 1 of 9: Starting pplacer')
             while True:
@@ -200,7 +216,7 @@ class Pplacer(object):
                                                       f'{states[4]} ({virt:.2f} GB)')
                         else:
                             p_bar.set_description_str(desc=f'Step {cur_state + 1} of {len(states)} '
-                                                           f'{states[4]}')
+                                                      f'{states[4]}')
                     elif cur_state == 4:
                         virt, res = get_proc_memory_gb(pid.value)
                         if virt and res:
@@ -209,9 +225,20 @@ class Pplacer(object):
                                                       f'{res / virt:.2%})')
                         else:
                             p_bar.set_description_str(desc=f'Step {cur_state + 1} of {len(states)}: '
-                                                           f'{states[5]}')
+                                                      f'{states[5]}')
                 except Exception:
                     pass
+        if virt is not None:
+            if self.marker_set_id == 'ar122':
+                pplacer_mem_file.write('{}\t{} GB.\n'.format(
+                    self.marker_set_id, round(virt, 2)))
+            elif self.tree_iter is not None:
+                pplacer_mem_file.write(f'low_tree_{self.tree_iter}\t{virt:.2f} GB.\n')
+            elif self.levelopt is not None:
+                pplacer_mem_file.write(f'high_tree\t{virt:.2f} GB.\n')
+            else:
+                pplacer_mem_file.write(f'{self.marker_set_id}\t{virt:.2f} GB.\n')
+        pplacer_mem_file.close()
 
     def tog(self, pplacer_json_out, tree_file):
         """ Convert the pplacer json output into a newick tree.

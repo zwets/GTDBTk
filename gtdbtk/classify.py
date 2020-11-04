@@ -95,7 +95,9 @@ class Classify(object):
                       prefix,
                       scratch_dir=None,
                       levelopt=None,
-                      tree_iter=None):
+                      tree_iter=None,
+                      step=None,
+                      step_numbers=None):
         """Place genomes into reference tree using pplacer."""
 
         # Warn if the memory is insufficient
@@ -155,7 +157,7 @@ class Classify(object):
                     Config.HIGH_PPLACER_DIR, Config.HIGH_PPLACER_REF_PKG)
             elif levelopt == 'low':
                 self.logger.info(
-                    f'Placing {num_genomes} bacterial genomes into low reference tree {tree_iter} with pplacer using {self.pplacer_cpus} cpus (be patient).')
+                    f'[{step}/{step_numbers}]Placing {num_genomes} bacterial genomes into low reference tree {tree_iter} with pplacer using {self.pplacer_cpus} cpus (be patient).')
                 pplacer_ref_pkg = os.path.join(
                     Config.LOW_PPLACER_DIR, Config.LOW_PPLACER_REF_PKG.format(iter=tree_iter))
         elif marker_set_id == 'ar122':
@@ -175,6 +177,7 @@ class Classify(object):
 
         # run pplacer
         if marker_set_id == 'bac120':
+            pplacer_mem = os.path.join(out_dir, PATH_BAC120_PPLACER_MEM)
             if levelopt is None:
                 pplacer_out = os.path.join(out_dir, PATH_BAC120_PPLACER_OUT)
                 pplacer_json_out = os.path.join(
@@ -192,13 +195,14 @@ class Classify(object):
         elif marker_set_id == 'ar122':
             pplacer_out = os.path.join(out_dir, PATH_AR122_PPLACER_OUT)
             pplacer_json_out = os.path.join(out_dir, PATH_AR122_PPLACER_JSON)
+            pplacer_mem = os.path.join(out_dir, PATH_AR122_PPLACER_MEM)
         else:
             self.logger.error('There was an error determining the marker set.')
             raise GenomeMarkerSetUnknown
 
-        pplacer = Pplacer()
+        pplacer = Pplacer(marker_set_id, levelopt, tree_iter)
         pplacer.run(self.pplacer_cpus, 'wag', pplacer_ref_pkg, pplacer_json_out,
-                    user_msa_file, pplacer_out, pplacer_mmap_file)
+                    user_msa_file, pplacer_out, pplacer_mem, pplacer_mmap_file)
         if levelopt is None or levelopt == 'high':
             self.logger.info('pplacer version: {}'.format(pplacer.version))
 
@@ -441,12 +445,12 @@ class Classify(object):
 
                 sorted_high_taxonomy, len_sorted_genomes = self._map_high_taxonomy(
                     high_classification, tree_mapping_dict, summaryfout)
-                self.logger.info(f"{len_sorted_genomes} out of {num_genomes} have an order assignments. Those genomes will be reclassified.")
+                self.logger.info(f"{len_sorted_genomes} out of {num_genomes} have an order assignment. Those genomes will be reclassified.")
 
-                for tree_iter in sorted(sorted_high_taxonomy, key=lambda z: len(sorted_high_taxonomy[z]), reverse=True):
+                for idx, tree_iter in enumerate(sorted(sorted_high_taxonomy, key=lambda z: len(sorted_high_taxonomy[z]), reverse=True), 1):
                     listg = sorted_high_taxonomy.get(tree_iter)
                     low_classify_tree, submsa_file_path = self._place_in_low_tree(
-                        tree_iter, listg, msa_dict, marker_set_id, prefix, scratch_dir, out_dir)
+                        tree_iter, listg, msa_dict, marker_set_id, prefix, scratch_dir, out_dir, idx, len(sorted_high_taxonomy))
                     mrca_lowtree = self._assign_mrca_red(
                         low_classify_tree, marker_set_id, 'low', tree_iter)
                     pplacer_taxonomy_dict = self._get_pplacer_taxonomy(
@@ -454,7 +458,7 @@ class Classify(object):
 
                     self._parse_tree(mrca_lowtree, genomes, msa_dict, percent_multihit_dict, trans_table_dict,
                                      bac_ar_diff, submsa_file_path, marker_dict, summaryfout, conflict_file, pplacer_taxonomy_dict,
-                                     high_classification, debugfile)
+                                     high_classification, tree_iter, debugfile)
                 summaryfout.close()
                 if self.debug_mode:
                     debugfile.close()
@@ -492,6 +496,7 @@ class Classify(object):
                                  summaryfout,
                                  conflict_file,
                                  pplacer_taxonomy_dict,
+                                 None,
                                  None,
                                  debugfile)
 
@@ -551,7 +556,7 @@ class Classify(object):
                 "User genome\tHigh classification\tLow Classification\n")
         return(summaryfout, debug_file, conflict_summary)
 
-    def _place_in_low_tree(self, tree_iter, listg, msa_dict, marker_set_id, prefix, scratch_dir, out_dir):
+    def _place_in_low_tree(self, tree_iter, listg, msa_dict, marker_set_id, prefix, scratch_dir, out_dir, step, step_numbers):
         """
         Places the genome of interest in a low reference tree
         :param tree_iter: Tree id
@@ -577,11 +582,11 @@ class Classify(object):
                                                out_dir,
                                                prefix,
                                                scratch_dir,
-                                               'low', tree_iter)
+                                               'low', tree_iter, step, step_numbers)
         return(low_classify_tree, submsa_file_path)
 
     def _parse_tree(self, tree, genomes, msa_dict, percent_multihit_dict, trans_table_dict, bac_ar_diff,
-                    user_msa_file, marker_dict, summaryfout, conflict_file, pplacer_taxonomy_dict, high_classification, debugfile):
+                    user_msa_file, marker_dict, summaryfout, conflict_file, pplacer_taxonomy_dict, high_classification, tree_index, debugfile):
         # Genomes can be classified by using FastANI or RED values
         # We go through all leaves of the tree. if the leaf is a user
         # genome we take its parent node and look at all the leaves
@@ -669,7 +674,27 @@ class Classify(object):
 
         self.logger.info('{0} genome(s) have been classified using FastANI and pplacer.'.format(
             len(classified_user_genomes)))
+        # TO DELETE TEMP
+        if self.debug_mode:
+            file_tree_mapping = open(os.path.join(
+                os.path.dirname(summaryfout.name), 'treemapping.tsv'), 'a')
+            for x in classified_user_genomes:
+                file_tree_mapping.write('{}\tTRUE\t{}\n'.format(x, tree_index))
+            for x in unclassified_user_genomes:
+                file_tree_mapping.write(
+                    '{}\tFALSE\t{}\n'.format(x, tree_index))
+            user_genome_ids_temp = set(read_fasta(user_msa_file).keys())
+            user_genome_ids_temp = user_genome_ids_temp.difference(
+                set(classified_user_genomes))
+            user_genome_ids_temp = user_genome_ids_temp.difference(
+                set(unclassified_user_genomes))
+            for x in user_genome_ids_temp:
+                file_tree_mapping.write(
+                    '{}\tFALSE\t{}\n'.format(x, tree_index))
+
+        ###
         user_genome_ids = set(read_fasta(user_msa_file).keys())
+
         # we remove ids already classified with FastANI
         user_genome_ids = user_genome_ids.difference(
             set(classified_user_genomes))
@@ -895,8 +920,6 @@ class Classify(object):
             rk_to_check = v.get('tk_tax').split(
                 ';')[self.order_rank.index(self.rank_of_interest)]
             rktocheck.append(rk_to_check)
-            if rk_to_check.startswith('c'):
-                print(v.get('tk_tax'))
             if len(rk_to_check) > 3:
                 mapped_rank.setdefault(
                     mapping_dict.get(rk_to_check), []).append(k)
@@ -906,11 +929,10 @@ class Classify(object):
                 output_file[0] = k
                 output_file[1] = v.get('tk_tax')
                 output_file[12] = v.get('pplacer_tax')
+                output_file[13] = 'taxonomic novelty determined using RED'
                 output_file[18] = v.get('rel_dist')
                 summary_file.write("{}\n".format(
                     '\t'.join(['N/A' if x is None else str(x) for x in output_file])))
-        for item in set(rktocheck):
-            print(item, mapping_dict.get(item))
         return mapped_rank, counter
 
     def _assign_mrca_red(self, input_tree, marker_set_id, levelopt=None, tree_iter=None):
@@ -1889,10 +1911,19 @@ class Classify(object):
                         list_ranks = [self.gtdb_taxonomy.get(
                             name)[self.order_rank.index(child_rk)] for name in list_subnode]
 
+                        # Temporary : Classification to arder level for all genomes
+                        # We check is the brnach leads to an unique order
+                        list_orders = [self.gtdb_taxonomy.get(
+                            name)[self.order_rank.index('o__')] for name in list_subnode]
+                        if len(set(list_orders)) == 1:
+                            taxa_str = ';'.join(self.gtdb_taxonomy.get(list_subnode[0])[
+                                                1:self.order_rank.index('o__') + 1])
+                            print (leaf.taxon.label, taxa_str)
+
                         # if there is just one rank name
                         # (i.e one order) we select the RED value of this rank to compare with the
                         # RED value of the genome of interest
-                        if len(set(list_ranks)) == 1:
+                        elif len(set(list_ranks)) == 1:
                             for subranknd in node_in_ref_tree.preorder_iter():
                                 _support, subranknd_taxon, _aux_info = parse_label(
                                     subranknd.label)
@@ -1903,12 +1934,14 @@ class Classify(object):
                                     child_taxon_node = subranknd
                                     child_rel_dist = child_taxon_node.rel_dist
                                     break
+
                             taxa_str = self._classify_on_internal_branch(
                                 child_taxons, current_rel_dist, child_rel_dist, parent_rank, taxa_str, red_bac_dict)
                     results[leaf.taxon.label] = {"tk_tax": self.standardise_taxonomy(taxa_str, 'bac120'),
                                                  "pplacer_tax": self.standardise_taxonomy(pplacer_tax, 'bac120'), 'rel_dist': current_rel_dist}
                     pplaceout.write('{}\t{}\t{}\t{}\t{}\n'.format(leaf.taxon.label, self.standardise_taxonomy(taxa_str, 'bac120'),
                                                                   self.standardise_taxonomy(pplacer_tax, 'bac120'), is_on_terminal_branch, current_rel_dist))
+        input("Press Enter to continue...")
         return results
 
     def _classify_on_internal_branch(self, child_taxons, current_rel_list, child_rel_dist, parent_rank, taxa_str, red_bac_dict):
@@ -1927,7 +1960,7 @@ class Classify(object):
                         child_rel_dist - red_bac_dict.get(child_taxon_rank)) and
                         abs(current_rel_list - red_bac_dict.get(child_taxon_rank)) < abs(
                             current_rel_list - red_bac_dict.get(parent_rank))):
-                    closest_rank = child_taxon[:3]
+                    closest_rank = child_taxon
                 elif closest_rank is None:
                     closest_rank = parent_rank
             else:
@@ -1939,11 +1972,12 @@ class Classify(object):
                             child_rel_dist - red_bac_dict.get(child_taxon_rank))):
                     closest_rank = child_taxon
                     break
+
         if closest_rank is not None:
             # when we have the closest rank found, we can find it in
             # gtdb_Taxonomy and get the higher level from it.
             for k, v in self.gtdb_taxonomy.items():
-                if '{};'.format(closest_rank) in v:
+                if closest_rank in v:
                     return(';'.join(v[1:v.index(closest_rank) + 1]))
         return taxa_str
 
@@ -1974,4 +2008,10 @@ class Classify(object):
                     break
         if closest_rank is None:
             closest_rank = parent_rank
+        # temporary: to delete
+        # All classification should be at least to the order level if a genome
+        # is placed on a terminal branch
+        if self.order_rank.index(closest_rank) < self.order_rank.index('o__'):
+            return ';'.join(term_branch_taxonomy[1:self.order_rank.index('o__') + 1])
+
         return ';'.join(term_branch_taxonomy[1:self.order_rank.index(closest_rank) + 1])
