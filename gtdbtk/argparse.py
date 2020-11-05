@@ -175,7 +175,7 @@ def __recalculate_red(group):
 
 
 def __split_tree(group):
-    group.add_argument('-s', '--split_tree', action='store_true',
+    group.add_argument('-s', '--split_tree', action='store_true', default=False,
                        help='Use shards of the reference tree (for Bacteria only). reduce memory usage (slower).')
 
 
@@ -332,7 +332,7 @@ def get_main_parser():
             __force(grp)
             __scratch_dir(grp)
             __recalculate_red(grp)
-            # __split_tree(grp)
+            __split_tree(grp)
             __debug(grp)
             __help(grp)
 
@@ -402,7 +402,7 @@ def get_main_parser():
             __cpus(grp)
             __pplacer_cpus(grp)
             __scratch_dir(grp)
-            # __split_tree(grp)
+            __split_tree(grp)
             __recalculate_red(grp)
             __debug(grp)
             __help(grp)

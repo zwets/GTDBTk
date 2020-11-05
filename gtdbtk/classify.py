@@ -26,7 +26,6 @@ from operator import itemgetter
 
 import dendropy
 
-from tqdm import tqdm
 from numpy import median as np_median
 
 import gtdbtk.config.config as Config
@@ -325,7 +324,7 @@ class Classify(object):
                 results['s__'] = v
         return results
 
-    def parser_marker_summary_file(self, marker_summary_file, marker_set_id):
+    def parser_marker_summary_file(self, marker_summary_fh):
         """
         Parse the marker summary file from the align step
         :param marker_summary_file: marker summary file from the align step
@@ -471,7 +470,7 @@ class Classify(object):
                                  pplacer_taxonomy_dict,
                                  None,
                                  None,
-                                 debugopt)
+                                 debugfile)
 
                 # Symlink to the summary file from the root
                 if marker_set_id == 'bac120':
@@ -621,7 +620,7 @@ class Classify(object):
 
     def _classify_red_topology(self, tree, msa_dict, percent_multihit_dict, trans_table_dict, bac_ar_diff,
                                user_msa_file, red_dict, summary_file, conflict_file, pplacer_taxonomy_dict,
-                               high_classification, debugfile, debugopt, classified_user_genomes,
+                               high_classification, debugfile, classified_user_genomes,
                                unclassified_user_genomes, tt):
         user_genome_ids = set(read_fasta(user_msa_file).keys())
         user_genome_ids = user_genome_ids.difference(set(classified_user_genomes))
@@ -854,7 +853,7 @@ class Classify(object):
         # TO DELETE TEMP
         if self.debug_mode:
             file_tree_mapping = open(os.path.join(
-                os.path.dirname(summaryfout.name), 'treemapping.tsv'), 'a')
+                os.path.dirname(summary_file.name), 'treemapping.tsv'), 'a')
             for x in classified_user_genomes:
                 file_tree_mapping.write('{}\tTRUE\t{}\n'.format(x, tree_index))
             for x in unclassified_user_genomes:
@@ -876,7 +875,7 @@ class Classify(object):
                                     trans_table_dict, bac_ar_diff, user_msa_file,
                                     red_dict, summary_file, conflict_file,
                                     pplacer_taxonomy_dict, high_classification,
-                                    debugfile, debugopt, classified_user_genomes,
+                                    debugfile, classified_user_genomes,
                                     unclassified_user_genomes, tt)
 
     def _map_high_taxonomy(self, high_classification, mapping_dict, summary_file):
@@ -1860,14 +1859,14 @@ class Classify(object):
                         child_rk = self.order_rank[self.order_rank.index(
                             parent_rank) + 1]
 
-                            # get all reference genomes under the current node
-                            list_subnode = [childnd.taxon.label.replace("'", '') for childnd in
-                                            node_in_ref_tree.leaf_iter()
-                                            if childnd.taxon.label[0:3] in self.reference_ids]
+                        # get all reference genomes under the current node
+                        list_subnode = [childnd.taxon.label.replace("'", '') for childnd in
+                                        node_in_ref_tree.leaf_iter()
+                                        if childnd.taxon.label[0:3] in self.reference_ids]
 
-                            # get all names for the child rank
-                            list_ranks = [self.gtdb_taxonomy.get(name)[self.order_rank.index(child_rk)]
-                                          for name in list_subnode]
+                        # get all names for the child rank
+                        list_ranks = [self.gtdb_taxonomy.get(name)[self.order_rank.index(child_rk)]
+                                      for name in list_subnode]
 
                         # Temporary : Classification to arder level for all genomes
                         # We check is the brnach leads to an unique order
