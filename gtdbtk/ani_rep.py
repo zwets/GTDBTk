@@ -7,10 +7,12 @@ from gtdbtk.biolib_lite.execute import check_dependencies
 from gtdbtk.biolib_lite.taxonomy import Taxonomy
 from gtdbtk.config.config import (FASTANI_GENOMES,
                                   FASTANI_GENOMES_EXT,
-                                  TAXONOMY_FILE)
+                                  TAXONOMY_FILE,
+                                  AF_THRESHOLD)
 from gtdbtk.config.output import DIR_ANI_REP_INT_MASH
 from gtdbtk.external.fastani import FastANI
 from gtdbtk.external.mash import Mash
+from gtdbtk.io.gtdb_radii import GTDBRadiiFile
 
 
 
@@ -84,6 +86,7 @@ class ANIRep(object):
         """
         self.check_dependencies(no_mash)
 
+        self.logger.info('Loading reference genomes.')
         ref_genomes = self._get_ref_genomes()
         d_compare = defaultdict(set)
         d_paths = {**genomes, **ref_genomes}
@@ -102,7 +105,7 @@ class ANIRep(object):
             for qry_gid in genomes:
                 d_compare[qry_gid] = set(ref_genomes.keys())
 
-        self.logger.info('Calculating ANI with FastANI.')
+        self.logger.info(f'Calculating ANI with FastANI v{FastANI._get_version()}.')
         fastani = FastANI(self.cpus, force_single=True)
         fastani_results = fastani.run(d_compare, d_paths)
 
@@ -179,11 +182,13 @@ class ANIClosestFile(object):
         self.genomes = genomes
         self.min_af = min_af
         self.taxonomy = taxonomy
+        self.gtdb_radii = GTDBRadiiFile()
         self._write()
 
     def _write(self):
         with open(self.path, 'w') as fh:
-            fh.write('user_genome\treference_genome\tfastani_ani\tfastani_af\treference_taxonomy\n')
+            fh.write('user_genome\treference_genome\tfastani_ani\tfastani_af\t'
+                     'reference_taxonomy\tsatisfies_gtdb_circumscription_criteria\n')
             for gid in sorted(self.genomes):
                 if gid in self.results:
                     thresh_results = [(ref_gid, hit) for (ref_gid, hit) in
@@ -193,11 +198,16 @@ class ANIClosestFile(object):
                         ref_gid = closest[0][0]
                         canonical_rid = canonical_gid(ref_gid)
                         taxonomy_str = ';'.join(self.taxonomy[canonical_rid])
+                        gtdb_ani_radius = self.gtdb_radii.get_rep_ani(canonical_rid)
+                        closest_ani = closest[0][1]["ani"]
+                        closest_af = closest[0][1]["af"]
+
                         fh.write(f'{gid}\t{ref_gid}')
-                        fh.write(f'\t{closest[0][1]["ani"]}\t{closest[0][1]["af"]}')
-                        fh.write(f'\t{taxonomy_str}\n')
+                        fh.write(f'\t{closest_ani}\t{closest_af}')
+                        fh.write(f'\t{taxonomy_str}')
+                        fh.write(f'\t{closest_ani >= gtdb_ani_radius and closest_af >= AF_THRESHOLD}\n')
                     else:
-                        fh.write(f'{gid}\tno result\tno result\tno result\tno result\n')
+                        fh.write(f'{gid}\tno result\tno result\tno result\tno result\tno result\n')
                 else:
-                    fh.write(f'{gid}\tno result\tno result\tno result\n')
+                    fh.write(f'{gid}\tno result\tno result\tno result\tno result\n')
         self.logger.info(f'Closest representative hits saved to: {self.path}')
