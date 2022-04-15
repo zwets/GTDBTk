@@ -37,12 +37,15 @@ DIR_ALIGN_MARKERS = join(DIR_ALIGN_INTERMEDIATE, 'markers')
 
 # Command: classify
 DIR_CLASSIFY = 'classify'
+MAX_LOW_TREES = 100
 PATH_BAC120_TREE_FILE = join(DIR_CLASSIFY, '{prefix}.bac120.classify.tree')
 PATH_AR53_TREE_FILE = join(DIR_CLASSIFY, '{prefix}.ar53.classify.tree')
 PATH_BAC120_SUMMARY_OUT = join(DIR_CLASSIFY, '{prefix}.bac120.summary.tsv')
 PATH_AR53_SUMMARY_OUT = join(DIR_CLASSIFY, '{prefix}.ar53.summary.tsv')
 PATH_HIGH_BAC120_TREE_FILE = join(DIR_CLASSIFY, '{prefix}.high.bac120.classify.tree')
+PATH_HIGH_AR53_TREE_FILE = join(DIR_CLASSIFY, '{prefix}.high.ar53.classify.tree')
 PATH_LOW_BAC120_TREE_FILE = join(DIR_CLASSIFY, '{prefix}.bac120.classify.tree.{iter}.tree')
+PATH_LOW_AR53_TREE_FILE = join(DIR_CLASSIFY, '{prefix}.ar53.classify.tree.{iter}.tree')
 PATH_BAC120_CONFLICT = join(DIR_CLASSIFY, '{prefix}.bac120.conflict.tsv')
 PATH_AR53_DISAPPEARING_GENOMES = join(DIR_CLASSIFY, '{prefix}.ar53.disappearing_genomes.tsv')
 PATH_BAC120_DISAPPEARING_GENOMES = join(DIR_CLASSIFY, '{prefix}.bac120.disappearing_genomes.tsv')
