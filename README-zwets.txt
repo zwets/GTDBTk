@@ -11,7 +11,7 @@ Installation of 2.1.0 straight from Conda should be
 But didn't work (release not there yet), so installed from source,
 and same for upgrade to 2.1.1 (2022-07-15), and 2.2.0 and later:
 
-    VER=2.2.3
+    VER=2.2.6
     mamba create --quiet -n gtdbtk-$VER -c conda-forge -c bioconda python \
         dendropy numpy tqdm prodigal hmmer pplacer fastani fasttree mash \
         pydantic
