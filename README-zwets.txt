@@ -9,14 +9,14 @@ Installation of 2.1.0 straight from Conda should be
     conda create -n gtdbtk-2.1.0 -c conda-forge -c bioconda gtdbtk=2.1.0
 
 But didn't work (release not there yet), so installed from source,
-and same for upgrade to 2.1.1 (2022-07-15), and 2.2.0 and later:
+and same for upgrade to 2.1.1 (2022-07-15), and further:
 
-    VER=2.2.6
+    VER=2.3.0   # on 2023-05-09
     mamba create --quiet -n gtdbtk-$VER -c conda-forge -c bioconda python \
         dendropy numpy tqdm prodigal hmmer pplacer fastani fasttree mash \
         pydantic
 
-Before running setup.py, comment out the requirement (we did that already):
+Before running setup.py, comment out the requirement (done in branch 'zwets'):
 
     sed -i -Ee 's/^( *)install_requires=/\1#install_requires=/' setup.py
 
