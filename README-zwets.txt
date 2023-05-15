@@ -28,14 +28,13 @@ Now install
 Set GTDBTK_DATA_PATH
 
     conda activate gtdbtk-$VER
-    conda env config vars set GTDBTK_DATA_PATH=/data/genomics/gtdbtk/release207_v2
+    conda env config vars set GTDBTK_DATA_PATH=/data/genomics/gtdbtk/release214
 
 Add to HPC user-scripts
 
     See the repo https://git.kcri.it/hpc/user-scripts
 
-Check
+Check installation
 
     gtdbtk check_install
-
 
