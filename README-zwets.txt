@@ -12,12 +12,13 @@ But didn't work (release not there yet), so installed from source,
 and same for upgrade to 2.1.1 (2022-07-15), and further:
 
     VER=2.3.0   # on 2023-05-09
-    mamba create --quiet -n gtdbtk-$VER -c conda-forge -c bioconda python \
+    mamba create --quiet -y -n gtdbtk-$VER -c conda-forge -c bioconda python \
         dendropy numpy tqdm prodigal hmmer pplacer fastani fasttree mash \
         pydantic
 
 Before running setup.py, comment out the requirement (done in branch 'zwets'):
 
+    # This already done in this branch (zwets)
     sed -i -Ee 's/^( *)install_requires=/\1#install_requires=/' setup.py
 
 Now install
